@@ -3,30 +3,60 @@ services:
   eureka-server:
     image: eureka
     build:
-      context: eureka
+      context: ./eureka
     restart: always
     container_name: eureka
     ports:
       - '8761:8761'
     networks:
-      - 'dockernetflix-network'
-  zuul-service:
-    image: zuul #nombre de la imagen que hemos creado
-    build:
-      context: zuul
-    restart: always
-    container_name: zuul
-    ports:
-      - '7000:7000'
-    networks:
-      - 'dockernetflix-network'
+      - 'servicio-sergio'
   greeting-microservice:
-    image: greetmicroservice #nombre de la imagen que hemos creado
+    image: greetmicroservice
+    links:
+      - eureka-server
     build:
-      context: micro
+      context: ./greeting
     restart: always
     container_name: greetmicroservice
     networks:
-      - 'dockernetflix-network'
+      - 'servicio-sergio'
+  greeting-microservice-2:
+    image: greetmicroservice
+    links:
+      - eureka-server
+    build:
+      context: ./greeting
+    restart: always
+    container_name: greetmicroservice2
+    networks:
+      - 'servicio-sergio'
+  gateway-server:
+    image: gateway-server
+    links:
+      - eureka-server
+      - greeting-microservice
+      - greeting-microservice2
+    build:
+      context: ./gateway-server
+    restart: always
+    container_name: gateway-server
+    ports:
+      - '8090:8090'
+    networks:
+      - 'servicio-sergio'
+  zuul:
+    image: zuul
+    links:
+      - eureka-server
+      - greeting-microservice
+      - greeting-microservice2
+    build:
+      context: ./zuul
+    restart: always
+    container_name: zuul
+    ports:
+      - '8091:7000'
+    networks:
+      - 'servicio-sergio'
 networks:
-  dockernetflix-network:
+  servicio-sergio:
